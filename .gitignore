@@ -1,0 +1,31 @@
+﻿# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Data & heavy geospatial files (adjust as needed)
+data/
+*.gdb
+*.gdb.zip
+*.zip
+*.tif
+*.tiff
+
+# VS Code
+.vscode/
