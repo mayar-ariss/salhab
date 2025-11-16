@@ -19,13 +19,5 @@ Thumbs.db
 # Logs
 *.log
 
-# Data & heavy geospatial files (adjust as needed)
-data/
-*.gdb
-*.gdb.zip
-*.zip
-*.tif
-*.tiff
-
 # VS Code
 .vscode/
