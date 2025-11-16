@@ -15,17 +15,17 @@ This repo contains:
 ```text
 salhab/
   modules/
-    scraper.py              # Download and extract IR geodatabases / shapefile bundles
-    request_fire.py         # Helper(s) for calling external fire simulation APIs (WIP/optional)
-    fire_progression_map.py # Build interactive progression maps from indexed IR perimeters
+    scraper.py              # download and extract IR geodatabases / shapefile bundles
+    request_fire.py         # calling external fire simulation API
+    fire_progression_map.py # progression maps from indexed IR perimeters
 
   notebooks/
-    fire_progression_viz.ipynb          # Single-incident fire progression visualization
+    fire_progression_viz.ipynb          # single-incident fire progression visualization
     fire_progression_viz_select.ipynb   # UI-based incident selection + map generation
 
   data/
-    great_basin_ir_2015_2025/  # (Optional, large) Local copy of IR data organized by year/incident
-    ir_events_index.csv        # Index of incidents, years, and available IR days (generated upstream)
+    great_basin_ir_2015_2025/  # local copy of IR data organized by year/incident
+    ir_events_index.csv        # index of incidents, years, and available IR days (generated upstream)
 
   .gitignore
   README.md   # ← this file
