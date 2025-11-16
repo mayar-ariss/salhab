@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xml:lang="en"><Esri><CreaDate>20201005</CreaDate><CreaTime>04350500</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce><DataProperties><lineage><Process ToolSource="c:\program files (x86)\arcgis\desktop10.7\ArcToolbox\Toolboxes\Data Management Tools.tbx\CalculateField" Date="20201005" Time="043505">CalculateField 20201005_0305_Buck_HeatPerimeter GISAcres !Shape!.getArea("GEODESIC","ACRES") PYTHON_9.3 #</Process></lineage></DataProperties></Esri></metadata>
