@@ -1,3 +1,6 @@
+# API key: FirstKey_099d9dfd360352dfd4f2ee82c2bdf613cd4fe28e7d5ad8a4200bf6bd919d3a03
+#  python request_fire.py --key INPUTKEY HERE 
+
 import argparse
 import json
 

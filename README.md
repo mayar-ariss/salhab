@@ -4,9 +4,9 @@ Wildfire infrared (IR) perimeter **scraping, indexing, and visualization** for U
 
 This repo contains:
 
-- A scraper to **download** IR geodatabases / shapefile bundles from the NIFC FTP and build a CSV index of usable perimeters. :contentReference[oaicite:0]{index=0}  
-- A mapper to **build fire progression maps** for a given incident/year from the indexed IR perimeters. :contentReference[oaicite:1]{index=1}  
-- A small client to **call external wildfire simulation API**, pull a perimeter GeoJSON, and plot it as a quick sanity check. :contentReference[oaicite:2]{index=2}  
+- A scraper to **download** IR geodatabases / shapefile bundles from the NIFC FTP and build a CSV index of usable perimeters. 
+- A mapper to **build fire progression maps** for a given incident/year from the indexed IR perimeters. 
+- A small client to **call external wildfire simulation API**, pull a perimeter GeoJSON, and plot it as a quick sanity check. 
 - Notebooks to **browse incidents and generate interactive maps** from the indexed data.
 
 ---

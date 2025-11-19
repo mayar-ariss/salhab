@@ -24,12 +24,11 @@ CLI:
       --out-html scarface_2021_progression.html
 """
 
-#  Ensure required packages  installed
 import importlib
 import subprocess
 import sys
 
-
+# Ensure required packages installed
 def ensure_package(pkg_name: str):
     try:
         importlib.import_module(pkg_name)
@@ -41,7 +40,6 @@ def ensure_package(pkg_name: str):
 
 for _pkg in ("pandas", "geopandas", "folium"):
     ensure_package(_pkg)
-# -------------------------------------------------------------------------
 
 import argparse
 import datetime as dt
@@ -65,7 +63,7 @@ except ImportError:
     fiona = None  # geopandas usually brings it in
 
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Helpers for timestamp logic
 def parse_iso_or_none(s: str) -> Optional[dt.datetime]:
     """Parse ISO-like timestamp, or return None."""
@@ -117,7 +115,7 @@ def best_timestamp_for_row(row: pd.Series) -> Optional[dt.datetime]:
     return t2
 
 
-# ---------------------------------------------------------------------------
+# --------------------------------------------------------------------
 # Geometry loading
 
 def load_perimeter_from_path(path: Path) -> Optional[gpd.GeoDataFrame]:
@@ -135,8 +133,8 @@ def load_perimeter_from_path(path: Path) -> Optional[gpd.GeoDataFrame]:
         print(f"    ! path does not exist: {path}")
         return None
 
-    # ------------------------------------------------------------------
-    # Case 1: generic directory (like 20210723_Vinegar_shapefiles)
+    # ---------------------------------------------------------
+    # 1: generic directory (like 20210723_Vinegar_shapefiles)
     if path.is_dir() and not path.name.lower().endswith(".gdb"):
         # serch for shapefiles inside this folder
         shapefiles = sorted(p for p in path.glob("*.shp"))
@@ -151,8 +149,8 @@ def load_perimeter_from_path(path: Path) -> Optional[gpd.GeoDataFrame]:
         print(f"    - found shapefile in dir {path.name}: {chosen_shp.name}")
         path = chosen_shp  # continue below as if user passed this .shp
 
-    # ------------------------------------------------------------------
-    # Case 2: Shapefile
+    # ---------------------------------------------------------------
+    # 2: Shapefile
     if path.suffix.lower() == ".shp":
         try:
             gdf = gpd.read_file(path)
@@ -162,7 +160,7 @@ def load_perimeter_from_path(path: Path) -> Optional[gpd.GeoDataFrame]:
             return None
 
     # ------------------------------------------------------------------
-    # Case 3: File geodatabase (directory whose name ends as .gdb)
+    # 3: File geodatabase (directory whose name ends as .gdb)
     elif path.is_dir() and path.name.lower().endswith(".gdb"):
         if fiona is None:
             print(f"    ! fiona not available, cannot read gdb {path}")
@@ -200,8 +198,7 @@ def load_perimeter_from_path(path: Path) -> Optional[gpd.GeoDataFrame]:
         print(f"    ! unsupported path type (not .shp or .gdb dir): {path}")
         return None
 
-    # ------------------------------------------------------------------
-    # Clean up geometry and reproject
+    # --------------------------------------------
     if gdf.empty:
         return None
 
@@ -213,14 +210,14 @@ def load_perimeter_from_path(path: Path) -> Optional[gpd.GeoDataFrame]:
         if gdf.crs is not None and gdf.crs.to_epsg() != 4326:
             gdf = gdf.to_crs(epsg=4326)
     except Exception:
-        # If CRS is missing or invalid, assume it's already lon/lat
+        # if CRS is missing or invalid, assume it's already lon/lat
         pass
 
     return gdf
 
 
-# ---------------------------------------------------------------------------
-# Custom HTML legend
+# ---------------------------------------------------------
+# custom HTML legend
 
 class TimeLegend(MacroElement):
     """
@@ -290,8 +287,8 @@ class TimeLegend(MacroElement):
         self.gradient = gradient
 
 
-# ---------------------------------------------------------------------------
-# Fire progression map (all perimeters, hoverable)
+# -----------------------------------------------------
+# Fire progression map 
 
 def build_fire_progression_map(
     data_root: Path,
@@ -384,7 +381,7 @@ def build_fire_progression_map(
         except Exception as e:
             print(f"    ! failed to compute area for largest polygon: {e}")
 
-        #  timestamp
+        # timestamp
         ts = row["ts"]
         if ts is None:
             ts = parse_ir_folder_date(str(row["ir_folder"])) or dt.datetime(year, 1, 1)
@@ -418,7 +415,7 @@ def build_fire_progression_map(
     if not features:
         raise ValueError("No geometries loaded for this incident; nothing to map.")
 
-    # ------------------------------------------------------------
+    # -------------------------------------------------------------------------------
     # Compute elapsed time for each snapshot (for color mapping)
     real_times_dt = sorted({
         parse_iso_or_none(f["properties"]["time"])
@@ -453,7 +450,7 @@ def build_fire_progression_map(
         t0_str = "unknown"
         t1_str = "unknown"
 
-    # ------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Colormap + styling and display_time for hover
     incident_label = incidents_found[0] if incidents_found else incident_query
 
@@ -576,7 +573,7 @@ def build_fire_progression_map(
     return m
 
 
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # CLI entrypoint (map)
 
 def main() -> None:

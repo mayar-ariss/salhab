@@ -7,40 +7,34 @@ Created: 2025-11-15
 
 Scrape IR geodatabases (.gdb / .gdb.zip) and IR shapefile bundles from:
 
-  https://ftp.wildfire.gov/public/incident_specific_data/great_basin/
+  https://ftp.wildfire.gov/public/incident_specific_data/
 
 For each fire season folder 2015_Incidents ... 2025_Incidents:
   - Enters each incident folder
   - Enters the IR/ folder (if present)
   - Walks all IR date subfolders (e.g., 20150819/, 20250804_UTF_Tech/)
   - Downloads any archive/file relevant to IR geodatabases or shapefiles:
-      * .gdb in the name (typically *.gdb.zip)
-      * zips whose names contain "Shapefile"/"Shapefiles" (e.g. *_IR_Shapefiles.zip, *ShapeFileOutputs.zip)
+      - .gdb in the name (fro ex *.gdb.zip)
+      - zips whose names contain "Shapefile"/"Shapefiles" (e.g. *_IR_Shapefiles.zip, *ShapeFileOutputs.zip)
   - For shapefile zips:
-      * Only extracts shapefile groups whose basename contains "perimeter" or "perim"
-      * Disregards all other layers
+      - Only extracts shapefile groups whose basename contains "perimeter" or "perim"
+      - Disregards all other layers
   - Extracts:
-      * File geodatabases (.gdb directories)
-      * Perimeter shapefiles (.shp + associated sidecar files)
+      - File geodatabases (.gdb directories)
+      - Perimeter shapefiles (.shp + associated sidecar files)
   - By default, deletes the original .zip to save space
   - Removes empty IR day / IR / incident folders created locally
   - Records metadata (year, incident, IR folder, filename, URL, local path, timestamp) in a CSV index
 
-Usage example (max speed, auto workers):
+example:
 
   python scraper.py \
       --out ./great_basin_ir_2015_2025 \
       --index ir_events_index.csv
-
-To keep the .zip archives as well:
-
-  python scraper.py \
-      --out ./great_basin_ir_2015_2025 \
-      --index ir_events_index.csv \
-      --keep-zip
+      
 """
 
-# --- Ensure required packages are installed (requests, beautifulsoup4) ---
+# ensure required packages are installed (requests, beautifulsoup4)
 import importlib
 import subprocess
 import sys
@@ -72,8 +66,7 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
-
-# Parent Great Basin directory (not a specific year)
+# Parent directory (you can check https://ftp.wildfire.gov/public/incident_specific_data to select specific incident areas).
 DEFAULT_BASE_URL = (
     "https://ftp.wildfire.gov/public/incident_specific_data/great_basin/"
 )
@@ -102,11 +95,11 @@ def fetch_html(url: str) -> str:
 
 def list_dirs_files(url: str) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
     """
-    Parse an Apache-style directory listing page.
+    Parse Apache-style directory listing page.
 
     Returns:
-        dirs:  list of (name, absolute_url) for subdirectories
-        files: list of (name, absolute_url) for files
+        - dirs:  list of (name, absolute_url) for subdirectories
+        - files: list of (name, absolute_url) for files
     """
     html = fetch_html(url)
     soup = BeautifulSoup(html, "html.parser")
@@ -121,12 +114,10 @@ def list_dirs_files(url: str) -> Tuple[List[Tuple[str, str]], List[Tuple[str, st
         if not href:
             continue
 
-        # Skip query links and anchors
-        if href.startswith("?") or href.startswith("#"):
+        if href.startswith("?") or href.startswith("#"):  # skip query links and anchors
             continue
 
-        # Skip "Parent Directory"
-        if href.startswith("../") or "Parent Directory" in name:
+        if href.startswith("../") or "Parent Directory" in name: #skip "Parent Directory"
             continue
 
         if href.endswith("/"):
@@ -141,16 +132,14 @@ def list_dirs_files(url: str) -> Tuple[List[Tuple[str, str]], List[Tuple[str, st
 
 def parse_ir_timestamp(filename: str) -> dt.datetime | None:
     """
-    Parse the IR overflight timestamp from filenames like:
+    Parse the IR overflight timestamp from filenames as:
 
         20250731_2202_Cedar_IR.gdb.zip
         20250809_2305_Beulah_IR.gdb
         20150819_0248_Bobcat_IR_Shapefiles.zip
         20216010_0128_Bear_IR_Shapefiles.zip  (typo in month -> auto-correct)
 
-    Returns a naive datetime in local fire time (no timezone info),
-    or None if the pattern doesn't match or the date/time is invalid.
-    Includes a small heuristic to fix swapped month digits (e.g. "60" -> "06").
+    Includes a small fix for swapped month digits (e.g. "60" -> "06" for june).
     """
     pattern = r"(?P<date>\d{8})_(?P<time>\d{4})_.*?_IR(?:_.*)?\.(?:gdb(?:\.zip)?|zip)$"
     m = re.search(pattern, filename)
@@ -166,26 +155,25 @@ def parse_ir_timestamp(filename: str) -> dt.datetime | None:
     hour = int(t_str[0:2])
     minute = int(t_str[2:4])
 
-    # 1) First, try the straightforward datetime construction
+    # try the straightforward datetime construction
     try:
         month = int(month_str)
         return dt.datetime(year, month, day, hour, minute)
     except ValueError:
         pass  # fall through to typo correction
 
-    # 2) Heuristic: try swapped month digits (e.g. "60" -> "06")
+    #try swapped month digits (e.g. "60" -> "06")
     try:
         swapped_month_str = month_str[::-1]  # "60" -> "06"
         swapped_month = int(swapped_month_str)
         if 1 <= swapped_month <= 12:
             return dt.datetime(year, swapped_month, day, hour, minute)
     except ValueError:
-        # Still invalid (e.g., day out of range)
+        # still invalid (eg., day out of range)
         return None
 
-    # 3) If we still can't make sense of it, give up gracefully
+    # if we still can't make sense of it, give up 
     return None
-
 
 
 def download_file(url: str, dest: Path) -> None:
@@ -193,7 +181,7 @@ def download_file(url: str, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix(dest.suffix + ".part")
 
-    print(f"      ↳ downloading {url} → {dest}")
+    print(f"      -> downloading {url} -> {dest}")
     with session.get(url, stream=True, timeout=DOWNLOAD_TIMEOUT) as r:
         r.raise_for_status()
         with open(tmp, "wb") as f:
@@ -223,11 +211,11 @@ def extract_relevant_from_zip(
 
     Behaviour:
       - If perimeter_only is False:
-          * Extracts all members.
+          - Extracts all members.
       - If perimeter_only is True (shapefile zips):
-          * Only extracts members whose basename contains "perimeter" or "perim".
+          - Only extracts members whose basename contains "perimeter" or "perim".
             (e.g., fire_perimeter.shp, perimeter.dbf, perim_20250801.shx, etc.)
-          * Disregards all other files/layers.
+          - Disregards all other files/layers.
 
     If keep_zip is False, deletes the .zip file after extraction.
     """
@@ -269,11 +257,11 @@ def extract_relevant_from_zip(
             parts = m.split("/")
             top = parts[0]
 
-            # File geodatabase folder
+            # file geodatabase folder
             if top.lower().endswith(".gdb"):
                 gdb_dirs.add(top)
 
-            # Shapefiles anywhere (only perimeter ones were extracted when perimeter_only=True)
+            #Shapefiles anywhere (only perimeter ones were extracted when perimeter_only=True)
             if parts[-1].lower().endswith(".shp"):
                 shp_relpaths.append(m)
 
@@ -315,21 +303,21 @@ def process_ir_file(
     is_zip = lname.endswith(".zip")
     base = lname[:-4] if is_zip else lname  # name without .zip
 
-    # --- 1) IR geodatabases (unpacked or zipped) ---------------------------
+    # IR geodatabases (unpacked or zipped) 
     # Catch:
-    #   *.gdb
-    #   *_IRgdb.zip
-    #   *_IR_gdb.zip
+    #   -.gdb
+    #   -_IRgdb.zip
+    #   -_IR_gdb.zip
     is_gdb_related = (
         ".gdb" in base
-        or "irgdb" in base          # *_IRgdb.zip
-        or "ir_gdb" in base         # *_IR_gdb.zip
-    )
+        or "irgdb" in base          
+        or "ir_gdb" in base 
+        )        
 
-    # --- 2) IR shapefile bundles (zips) ------------------------------------
+    # IR shapefile bundles (zips) 
     # Catch:
-    #   *_IR_Shapefiles.zip, *_IR_Shapefile.zip
-    #   *_IR_shps.zip, *_IR_shp.zip, etc.
+    #   -_IR_Shapefiles.zip, -_IR_Shapefile.zip
+    #   -_IR_shps.zip, -_IR_shp.zip, etc.
     is_shapefile_zip = (
         is_zip
         and (
@@ -340,7 +328,7 @@ def process_ir_file(
         )
     )
 
-    # --- 3) Generic IR zips (e.g. 20150819_Cougar_IR.zip) ------------------
+    # Generic IR zips (e.g. 20150819_Cougar_IR.zip)
     has_ir_token = (
         "_ir" in base
         or "ir_" in base
@@ -348,7 +336,7 @@ def process_ir_file(
     )
     is_ir_zip_generic = is_zip and has_ir_token and not (is_gdb_related or is_shapefile_zip)
 
-    # If it's neither gdb-related nor shapefile nor a generic IR.zip, ignore it
+    # If it's neither gdb-related nor shapefile nor a generic IR.zip, ignore 
     if not (is_gdb_related or is_shapefile_zip or is_ir_zip_generic):
         return None
 
@@ -362,9 +350,7 @@ def process_ir_file(
     local_path_for_index: Path = local_archive_path
 
     if is_zip:
-        # ⬅ KEY CHANGE:
-        # - GDB zips: full extract (perimeter_only=False)
-        # - Shapefile zips AND generic IR zips: only perimeter/perim shapefiles
+    
         perimeter_only = is_shapefile_zip or is_ir_zip_generic
 
         extracted = extract_relevant_from_zip(
@@ -430,17 +416,17 @@ def scrape_ir_gdb_and_shapefiles(
     out_root: Path,
     keep_zip: bool = False,
     max_workers: int = -1,
-) -> List[Dict[str, str]]:
+    ) -> List[Dict[str, str]]:
     """
     Main scraper logic.
 
     Returns:
         List of index rows (dicts) to later write into CSV.
     """
-    # Resolve max_workers sentinel (-1 -> auto based on CPU)
+
     if max_workers is None or max_workers <= 0:
         cpu_count = os.cpu_count() or 4
-        # Aggressive but bounded: 4 * CPUs, max 32 threads
+
         max_workers = min(32, cpu_count * 4)
     print(f"[config] Using max_workers={max_workers}")
 
@@ -465,7 +451,7 @@ def scrape_ir_gdb_and_shapefiles(
             incident_name = incident_name.rstrip("/")
             print(f"\n  [incident] {incident_name}")
 
-            # Find IR/ subdirectory for this incident *before* creating any folder
+            # Find IR/ subdirectory for this incident before creating any folder
             subdirs, _ = list_dirs_files(incident_url)
             ir_candidates = [d for d in subdirs if d[0].rstrip("/") == "IR"]
 
