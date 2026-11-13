@@ -34,3 +34,8 @@ salhab/
   requirements.txt                      # Python dependencies
   .gitignore
   README.md                             # ← this file
+```
+
+## Installation
+
+Install dependencies with: pip install -r requirements.txt
