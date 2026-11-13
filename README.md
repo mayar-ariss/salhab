@@ -39,3 +39,8 @@ salhab/
 ## Installation
 
 Install dependencies with: pip install -r requirements.txt
+
+
+## Usage
+
+Open the notebooks in the notebooks/ folder to browse incidents and generate interactive fire progression maps.
